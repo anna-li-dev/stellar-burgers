@@ -1,21 +1,44 @@
-import { FC, useMemo } from 'react';
+import { FC, useMemo, useEffect } from 'react';
+import { useParams, Navigate } from 'react-router-dom';
+
 import { Preloader } from '../ui/preloader';
 import { OrderInfoUI } from '../ui/order-info';
 import { TIngredient } from '@utils-types';
 
+import { useDispatch, useSelector } from '../../services/store';
+import {
+  fetchOrderByNumber,
+  clearOrder
+} from '../../services/slices/orderSlice';
+
 export const OrderInfo: FC = () => {
   /** TODO: взять переменные orderData и ingredients из стора */
-  const orderData = {
-    createdAt: '',
-    ingredients: [],
-    _id: '',
-    status: '',
-    name: '',
-    updatedAt: 'string',
-    number: 0
-  };
+  const { number } = useParams();
+  const dispatch = useDispatch();
 
-  const ingredients: TIngredient[] = [];
+  const ingredients = useSelector((state) => state.ingredients.ingredients);
+  const feedOrders = useSelector((state) => state.feed.orders);
+  const profileOrders = useSelector((state) => state.profileOrders.orders);
+  const orderModalData = useSelector((state) => state.order.orderModalData);
+  const isLoading = useSelector((state) => state.order.isLoading);
+  const orderNotFound = useSelector((state) => state.order.orderNotFound);
+
+  const orderFromStore =
+    feedOrders.find((order) => order.number === Number(number)) ||
+    profileOrders.find((order) => order.number === Number(number));
+
+  useEffect(() => {
+    if (orderFromStore) {
+      dispatch(clearOrder());
+      return;
+    }
+
+    if (number) {
+      dispatch(fetchOrderByNumber(Number(number)));
+    }
+  }, [dispatch, number, orderFromStore]);
+
+  const orderData = orderFromStore || orderModalData;
 
   /* Готовим данные для отображения */
   const orderInfo = useMemo(() => {
@@ -59,7 +82,11 @@ export const OrderInfo: FC = () => {
     };
   }, [orderData, ingredients]);
 
-  if (!orderInfo) {
+  if (orderNotFound) {
+    return <Navigate to='/404' replace />;
+  }
+
+  if (isLoading || !orderInfo) {
     return <Preloader />;
   }
 

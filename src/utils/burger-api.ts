@@ -146,7 +146,8 @@ export const getOrderByNumberApi = (number: number) =>
     method: 'GET',
     headers: {
       'Content-Type': 'application/json'
-    }
+    },
+    cache: 'no-store'
   }).then((res) => checkResponse<TOrderResponse>(res));
 
 export type TRegisterData = {
@@ -171,7 +172,11 @@ export const registerUserApi = (data: TRegisterData) =>
   })
     .then((res) => checkResponse<TAuthResponse>(res))
     .then((data) => {
-      if (data?.success) return data;
+      if (data?.success) {
+        localStorage.setItem('refreshToken', data.refreshToken);
+        setCookie('accessToken', data.accessToken);
+        return data;
+      }
       return Promise.reject(data);
     });
 
@@ -190,7 +195,13 @@ export const loginUserApi = (data: TLoginData) =>
   })
     .then((res) => checkResponse<TAuthResponse>(res))
     .then((data) => {
-      if (data?.success) return data;
+      if (data?.success) {
+        localStorage.setItem('refreshToken', data.refreshToken);
+        setCookie('accessToken', data.accessToken);
+
+        return data;
+      }
+
       return Promise.reject(data);
     });
 
