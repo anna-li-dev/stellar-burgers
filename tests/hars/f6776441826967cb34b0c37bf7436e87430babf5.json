@@ -1,1 +1,7 @@
-{"success":false,"message":"You should be authorised"}
+{
+  "success": true,
+  "user": {
+    "email": "testmail@exam.com",
+    "name": "Test02"
+  }
+}
